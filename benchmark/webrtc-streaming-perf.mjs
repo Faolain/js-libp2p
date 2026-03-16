@@ -5,9 +5,9 @@ import { tcp } from '@libp2p/tcp'
 import { webRTCDirect } from '@libp2p/webrtc'
 import { createLibp2p } from 'libp2p'
 
-const TRANSFER_BYTES = 256 * 1024 * 1024
+const TRANSFER_BYTES = 512 * 1024 * 1024
 const THROUGHPUT_ITERATIONS = 2
-const LATENCY_ITERATIONS = 5
+const LATENCY_ITERATIONS = 3
 
 const summary = {
   timestamp: new Date().toISOString(),

@@ -48,6 +48,7 @@ This runs `benchmark/webrtc-perf.mjs` for `tcp` and `webrtc-direct`, parses the 
 ## What's Been Tried
 - Baseline from `benchmarking-results.md` on current branch: `webrtc-direct` is ~16.5x slower than TCP with 16 KiB messages and 2 MiB buffered amount.
 - On this machine / Node 24, the original timeout-driven throughput harness could fail to capture `webrtc-direct` throughput samples even though direct perf transfers work. Switched autoresearch to a fixed-size, reused-connection streaming benchmark to keep experiments reliable while still measuring the pure data path.
+- The first fixed-size 256 MiB benchmark still showed a lot of run-to-run variance, especially from the TCP side of the ratio. Increase transfer size to 512 MiB so the ratio is driven more by sustained streaming and less by startup noise.
 - Increasing `maxBufferedAmount` alone showed negligible gains.
 - Increasing `maxMessageSize` above 16 KiB failed with libdatachannel message-size limit errors in this environment.
 - Prior branch work reportedly reached about `webrtc_direct_tcp_ratio ~= 0.073` via node-side tuning. Re-evaluate and continue from there, but avoid assuming node-only wins necessarily translate to browsers.
