@@ -57,6 +57,7 @@ This rebuilds `packages/transport-webrtc`, runs `benchmark/webrtc-direct-streami
 - Known good wins so far:
   - node SCTP buffer tuning helped materially; the best retained setting so far is `sendBufferSize=8 MiB`, `recvBufferSize=4 MiB`
   - resuming writes when `bufferedAmount` drops below half the high-water mark improved sustained throughput over waiting for a full drain
+  - sending each framed WebRTC record with a single `RTCDataChannel.send(...)` call is now a confirmed win under the anchored direct-only benchmark as well as in the earlier PR experiments
 - Dead ends so far:
   - larger node SCTP buffers (`12 MiB`/`16 MiB` send, `8 MiB` recv) regressed or destabilized throughput
   - resuming writes too close to the high-water mark (`75%`) regressed badly
