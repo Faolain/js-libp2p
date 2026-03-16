@@ -120,6 +120,7 @@ export async function createDialerRTCPeerConnection (role: 'client' | 'server', 
     peerConnection: new PeerConnection(`${role}-${Date.now()}`, {
       disableFingerprintVerification: true,
       disableAutoNegotiation: true,
+      enableIceTcp: true,
       certificatePemFile: options.certificate.pem,
       keyPemFile: options.certificate.privateKey,
       enableIceUdpMux: role === 'server',
