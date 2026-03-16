@@ -29,7 +29,7 @@ export const UFRAG_PREFIX = 'libp2p+webrtc+v1/'
 /**
  * How much can be buffered to the DataChannel at once
  */
-export const MAX_BUFFERED_AMOUNT = 4 * 1024 * 1024
+export const MAX_BUFFERED_AMOUNT = 6 * 1024 * 1024
 
 /**
  * Max message size that can be sent to the DataChannel. In browsers this is
