@@ -79,8 +79,9 @@ export class WebRTCStream extends AbstractStream {
       this.incomingData.push(new Uint8Array(data, 0, data.byteLength))
     }
 
-    // dispatch drain event when the buffered amount drops to zero
-    this.channel.bufferedAmountLowThreshold = 0
+    // Resume writes before the channel fully drains so large transfers keep
+    // the SCTP send queue fed instead of bouncing between "full" and "empty".
+    this.channel.bufferedAmountLowThreshold = Math.floor(this.maxBufferedAmount / 2)
 
     this.channel.onbufferedamountlow = () => {
       if (this.writableNeedsDrain) {
