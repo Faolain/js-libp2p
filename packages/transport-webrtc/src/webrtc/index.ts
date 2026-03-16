@@ -1,7 +1,7 @@
 import { setSctpSettings } from 'node-datachannel'
 
 setSctpSettings({
-  sendBufferSize: 8 * 1024 * 1024,
+  sendBufferSize: 9 * 1024 * 1024,
   recvBufferSize: 4 * 1024 * 1024
 })
 

@@ -52,6 +52,7 @@ This rebuilds `packages/transport-webrtc`, runs `benchmark/webrtc-direct-streami
 - On this machine / Node 24, the original timeout-driven throughput harness could fail to capture `webrtc-direct` throughput samples even though direct perf transfers work. Switched autoresearch to a fixed-size, reused-connection streaming benchmark to keep experiments reliable while still measuring the pure data path.
 - The first fixed-size 256 MiB benchmark still showed a lot of run-to-run variance, especially from the TCP side of the ratio. Increasing transfer size to 512 MiB reduced startup noise but did not remove enough TCP variance for small improvements.
 - Current inner-loop metric anchors TCP to a session-local baseline from repeated 512 MiB runs and optimizes only the WebRTC direct side against that fixed reference.
+- Even after anchoring TCP, the 2-iteration direct-only benchmark still shows meaningful residual noise. Increase the direct-side throughput iterations to 3 so future optimization decisions are driven a bit more by sustained behavior and a bit less by individual-run variance.
 - Increasing `maxBufferedAmount` alone showed negligible gains in prior work, and raising it to 4 MiB on top of the new half-drain flow control caused transfer timeouts.
 - Increasing `maxMessageSize` above 16 KiB failed with libdatachannel message-size limit errors in this environment.
 - Known good wins so far:

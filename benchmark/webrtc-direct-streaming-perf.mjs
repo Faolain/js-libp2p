@@ -3,7 +3,7 @@ import { webRTCDirect } from '@libp2p/webrtc'
 import { createLibp2p } from 'libp2p'
 
 const TRANSFER_BYTES = 512 * 1024 * 1024
-const THROUGHPUT_ITERATIONS = 2
+const THROUGHPUT_ITERATIONS = 3
 const LATENCY_ITERATIONS = 3
 
 const listener = await createLibp2p({
