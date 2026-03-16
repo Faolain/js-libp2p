@@ -56,11 +56,14 @@ This rebuilds `packages/transport-webrtc`, runs `benchmark/webrtc-direct-streami
 - Increasing `maxMessageSize` above 16 KiB failed with libdatachannel message-size limit errors in this environment.
 - Known good wins so far:
   - node SCTP buffer tuning helped materially; the best retained setting so far is `sendBufferSize=8 MiB`, `recvBufferSize=4 MiB`
-  - resuming writes when `bufferedAmount` drops below half the high-water mark improved sustained throughput over waiting for a full drain
+  - raising `MAX_BUFFERED_AMOUNT` from the original 2 MiB to 6 MiB helped once combined with the later send/flow-control changes
+  - resuming writes before full drain is important; with `MAX_BUFFERED_AMOUNT=6 MiB`, the best retained threshold so far is `75%`
   - sending each framed WebRTC record with a single `RTCDataChannel.send(...)` call is now a confirmed win under the anchored direct-only benchmark as well as in the earlier PR experiments
+  - removing the per-message receive-path log from `RTCDataChannel.onmessage` improved download throughput
 - Dead ends so far:
-  - larger node SCTP buffers (`12 MiB`/`16 MiB` send, `8 MiB` recv) regressed or destabilized throughput
-  - resuming writes too close to the high-water mark (`75%`) regressed badly
-  - removing hot-path JS logging did not help
-  - sending each framed message as one contiguous RTCDataChannel message regressed slightly in the old benchmark setup
+  - larger node SCTP buffers (`10 MiB`/`12 MiB`/`16 MiB` send, `8 MiB` recv) regressed or destabilized throughput
+  - `MAX_BUFFERED_AMOUNT` at 1 MiB, 4 MiB, 5 MiB, 7 MiB, or 8 MiB under the current send/flow-control regime trails 6 MiB or becomes unstable
+  - receive thresholds at `50%`, `66%`, `70%`, and `80%+` trail the current `75%` best
+  - removing broader hot-path logging earlier did not help under older configurations, but that result was configuration-sensitive
+  - manual message-only frame encoding in JS regressed despite matching the existing wire format
 - Prior branch work reportedly reached about `webrtc_direct_tcp_ratio ~= 0.073` on a different workload; continue re-evaluating improvements here without assuming node-only wins necessarily translate to browsers.

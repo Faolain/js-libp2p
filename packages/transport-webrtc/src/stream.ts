@@ -13,6 +13,25 @@ import type { AbortOptions, MessageStreamDirection, Logger } from '@libp2p/inter
 import type { AbstractStreamInit, SendResult } from '@libp2p/utils'
 import type { Pushable } from 'it-pushable'
 
+function decodeVarint (buf: Uint8Array, offset: number = 0): { value: number, bytes: number } | undefined {
+  let value = 0
+  let shift = 0
+
+  for (let i = offset; i < buf.length; i++) {
+    const byte = buf[i]
+    value |= (byte & 0x7f) << shift
+
+    if ((byte & 0x80) === 0) {
+      return {
+        value,
+        bytes: i - offset + 1
+      }
+    }
+
+    shift += 7
+  }
+}
+
 export interface WebRTCStreamInit extends AbstractStreamInit, DataChannelOptions {
   /**
    * The network channel used for bidirectional peer-to-peer transfers of
@@ -75,7 +94,19 @@ export class WebRTCStream extends AbstractStream {
         return
       }
 
-      this.incomingData.push(new Uint8Array(data, 0, data.byteLength))
+      const message = new Uint8Array(data, 0, data.byteLength)
+      const frame = decodeVarint(message)
+
+      // Fast path: in the common case one RTCDataChannel message contains one
+      // complete framed libp2p record. Bypass the streaming length-prefixed
+      // decoder to reduce receive-path overhead, but fall back for older peers
+      // that may split one logical frame across multiple channel messages.
+      if (frame != null && frame.bytes + frame.value === message.byteLength) {
+        this.processIncomingProtobuf(message.subarray(frame.bytes))
+        return
+      }
+
+      this.incomingData.push(message)
     }
 
     // Resume writes before the channel fully drains so large transfers keep
@@ -233,7 +264,7 @@ export class WebRTCStream extends AbstractStream {
   /**
    * Handle incoming
    */
-  private processIncomingProtobuf (buffer: Uint8ArrayList): void {
+  private processIncomingProtobuf (buffer: Uint8Array | Uint8ArrayList): void {
     const message = Message.decode(buffer)
 
     // ignore data messages if we've closed the readable end already
