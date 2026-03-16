@@ -1,0 +1,2 @@
+- Build a dedicated browser-to-node WebRTC Direct throughput benchmark so shared-code optimizations can be validated directly against browser behavior instead of relying on the node direct proxy.
+- Revisit `benchmark/webrtc-perf.mjs` timeout-based throughput mode on Node 24; likely worker termination or reporting behavior makes long-running WebRTC direct uploads unreliable for autoresearch.
