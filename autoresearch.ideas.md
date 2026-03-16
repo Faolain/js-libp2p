@@ -1,2 +1,3 @@
 - Build a dedicated browser-to-node WebRTC Direct throughput benchmark so shared-code optimizations can be validated directly against browser behavior instead of relying on the node direct proxy. Initial attempt in this environment was blocked by missing Playwright runtime libraries (`libatk-1.0.so.0`).
+- Add a raw `node-datachannel` / libdatachannel microbenchmark to separate remaining native/SCTP overhead from js-libp2p stream-framing overhead; this is likely the highest-value next diagnostic step given the large remaining gap to TCP.
 - Revisit `benchmark/webrtc-perf.mjs` timeout-based throughput mode on Node 24; likely worker termination or reporting behavior makes long-running WebRTC direct uploads unreliable for autoresearch.

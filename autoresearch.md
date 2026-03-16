@@ -62,7 +62,8 @@ This rebuilds `packages/transport-webrtc`, runs `benchmark/webrtc-direct-streami
   - sending each framed WebRTC record with a single `RTCDataChannel.send(...)` call is now a confirmed win under the anchored direct-only benchmark as well as in the earlier PR experiments
   - removing the per-message receive-path log from `RTCDataChannel.onmessage` improved download throughput
 - Dead ends so far:
-  - larger node SCTP buffers (`10 MiB`/`12 MiB`/`16 MiB` send, `8 MiB` recv) regressed or destabilized throughput
+  - larger node SCTP buffers (`10 MiB`/`12 MiB`/`16 MiB` send, `5 MiB`/`8 MiB` recv) regressed or destabilized throughput
+  - lower-level SCTP tuning exposed by node-datachannel/libdatachannel (`maxChunksOnQueue`, `initialCongestionWindow`, `delayedSackTime`) has so far regressed throughput or destabilized the connection
   - `MAX_BUFFERED_AMOUNT` at 1 MiB, 4 MiB, 5 MiB, 7 MiB, or 8 MiB under the current send/flow-control regime trails 6 MiB or becomes unstable
   - receive thresholds at `50%`, `66%`, `70%`, and `80%+` trail the current `75%` best
   - removing broader hot-path logging earlier did not help under older configurations, but that result was configuration-sensitive
