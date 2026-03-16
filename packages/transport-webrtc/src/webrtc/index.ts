@@ -1,8 +1,8 @@
 import { setSctpSettings } from 'node-datachannel'
 
 setSctpSettings({
-  sendBufferSize: 6 * 1024 * 1024,
-  recvBufferSize: 4 * 1024 * 1024,
+  sendBufferSize: 3 * 1024 * 1024,
+  recvBufferSize: 2 * 1024 * 1024,
   congestionControlModule: 1
 })
 
