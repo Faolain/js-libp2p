@@ -87,7 +87,7 @@ export class WebRTCStream extends AbstractStream {
       this.abort(err)
     }
 
-    this.channel.onmessage = async (event: MessageEvent<ArrayBuffer>) => {
+    this.channel.onmessage = (event: MessageEvent<ArrayBuffer>) => {
       const { data } = event
 
       if (data === null || data.byteLength === 0) {
