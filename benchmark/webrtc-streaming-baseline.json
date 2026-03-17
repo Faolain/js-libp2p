@@ -1,0 +1,5 @@
+{
+  "description": "Anchored TCP baseline for WebRTC direct streaming autoresearch, derived from two 512 MiB baseline runs on this machine.",
+  "tcp_upload_mbps": 1044.5687902604424,
+  "tcp_download_mbps": 1170.2830647424555
+}
