@@ -13,6 +13,25 @@ import type { AbortOptions, MessageStreamDirection, Logger } from '@libp2p/inter
 import type { AbstractStreamInit, SendResult } from '@libp2p/utils'
 import type { Pushable } from 'it-pushable'
 
+function decodeVarint (buf: Uint8Array, offset: number = 0): { value: number, bytes: number } | undefined {
+  let value = 0
+  let shift = 0
+
+  for (let i = offset; i < buf.length; i++) {
+    const byte = buf[i]
+    value |= (byte & 0x7f) << shift
+
+    if ((byte & 0x80) === 0) {
+      return {
+        value,
+        bytes: i - offset + 1
+      }
+    }
+
+    shift += 7
+  }
+}
+
 export interface WebRTCStreamInit extends AbstractStreamInit, DataChannelOptions {
   /**
    * The network channel used for bidirectional peer-to-peer transfers of
@@ -68,19 +87,31 @@ export class WebRTCStream extends AbstractStream {
       this.abort(err)
     }
 
-    this.channel.onmessage = async (event: MessageEvent<ArrayBuffer>) => {
-      this.log('incoming message %d bytes', event.data.byteLength)
+    this.channel.onmessage = (event: MessageEvent<ArrayBuffer>) => {
       const { data } = event
 
       if (data === null || data.byteLength === 0) {
         return
       }
 
-      this.incomingData.push(new Uint8Array(data, 0, data.byteLength))
+      const message = new Uint8Array(data, 0, data.byteLength)
+      const frame = decodeVarint(message)
+
+      // Fast path: in the common case one RTCDataChannel message contains one
+      // complete framed libp2p record. Bypass the streaming length-prefixed
+      // decoder to reduce receive-path overhead, but fall back for older peers
+      // that may split one logical frame across multiple channel messages.
+      if (frame != null && frame.bytes + frame.value === message.byteLength) {
+        this.processIncomingProtobuf(message.subarray(frame.bytes))
+        return
+      }
+
+      this.incomingData.push(message)
     }
 
-    // dispatch drain event when the buffered amount drops to zero
-    this.channel.bufferedAmountLowThreshold = 0
+    // Resume writes before the channel fully drains so large transfers keep
+    // the SCTP send queue fed instead of bouncing between "full" and "empty".
+    this.channel.bufferedAmountLowThreshold = Math.floor(this.maxBufferedAmount * 0.7)
 
     this.channel.onbufferedamountlow = () => {
       if (this.writableNeedsDrain) {
@@ -140,18 +171,10 @@ export class WebRTCStream extends AbstractStream {
 
     this.log.trace('sending message, channel state "%s"', this.channel.readyState)
 
-    if (isFirefox) {
-      // TODO: firefox can deliver small messages out of order - remove once a
-      // browser with https://bugzilla.mozilla.org/show_bug.cgi?id=1983831 is
-      // available in playwright-test
-      this.channel.send(data.subarray())
-      return
-    }
-
-    // send message without copying data
-    for (const buf of data) {
-      this.channel.send(buf)
-    }
+    // RTCDataChannel is message-oriented, so each framed libp2p record should
+    // be emitted with a single send call instead of splitting the prefix and
+    // payload across multiple SCTP messages.
+    this.channel.send(data.subarray())
   }
 
   sendData (data: Uint8ArrayList): SendResult {
@@ -241,7 +264,7 @@ export class WebRTCStream extends AbstractStream {
   /**
    * Handle incoming
    */
-  private processIncomingProtobuf (buffer: Uint8ArrayList): void {
+  private processIncomingProtobuf (buffer: Uint8Array | Uint8ArrayList): void {
     const message = Message.decode(buffer)
 
     // ignore data messages if we've closed the readable end already
