@@ -120,10 +120,12 @@ export async function createDialerRTCPeerConnection (role: 'client' | 'server', 
     peerConnection: new PeerConnection(`${role}-${Date.now()}`, {
       disableFingerprintVerification: true,
       disableAutoNegotiation: true,
+      enableIceTcp: false,
       certificatePemFile: options.certificate.pem,
       keyPemFile: options.certificate.privateKey,
-      enableIceUdpMux: role === 'server',
+      enableIceUdpMux: false,
       maxMessageSize: MAX_MESSAGE_SIZE,
+      mtu: 1500,
       iceServers: mapIceServers(rtcConfig?.iceServers ?? DEFAULT_ICE_SERVERS.map(urls => ({ urls })))
     })
   })
