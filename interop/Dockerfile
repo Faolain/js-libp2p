@@ -4,6 +4,7 @@ FROM mcr.microsoft.com/playwright:v1.55.0
 WORKDIR /app
 
 COPY package.json package-lock.json ./
+COPY ./benchmark ./benchmark
 COPY ./packages ./packages
 COPY ./interop ./interop
 
